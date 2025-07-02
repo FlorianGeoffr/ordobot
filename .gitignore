@@ -1,0 +1,3 @@
+# Ignore all __pycache__ folders inside assets directory
+assets/__pycache__/
+assets/widget/__pycache__/
