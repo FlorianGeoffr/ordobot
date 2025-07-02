@@ -13,21 +13,21 @@ from assets.modelIA import ModelIA
 class ConfigDialog(QDialog):
     def __init__(self, parent=None):
         super(ConfigDialog, self).__init__(parent)
-        self.list_modeles = ModelIA.list_models()
+        self.list_models = ModelIA.list_models()
         self.setWindowTitle("Configuration des Modèles IA")
         self.setFixedSize(400, 200)
         layout = QVBoxLayout(self)
-        self.combo_modeles = QComboBox(self)
-        self.combo_modeles.addItems(self.list_modeles)
-        self.combo_modeles.setCurrentText(ModelIA.get_model_name())
-        self.combo_modeles.currentTextChanged.connect(self.update_description)
+        self.combo_models = QComboBox(self)
+        self.combo_models.addItems(self.list_models)
+        self.combo_models.setCurrentText(ModelIA.get_model_name())
+        self.combo_models.currentTextChanged.connect(self.update_description)
         layout.addWidget(QLabel("Sélectionnez le modèle IA :"))
-        layout.addWidget(self.combo_modeles)
-        self.description_modele = QLineEdit(self)
-        self.description_modele.setReadOnly(True)
+        layout.addWidget(self.combo_models)
+        self.description_model = QLineEdit(self)
+        self.description_model.setReadOnly(True)
         self.update_description()
         layout.addWidget(QLabel("Description du modèle :"))
-        layout.addWidget(self.description_modele)
+        layout.addWidget(self.description_model)
 
         button_save = QPushButton("Enregistrer", self)
         button_save.clicked.connect(self.save_config)
@@ -35,11 +35,11 @@ class ConfigDialog(QDialog):
         self.setLayout(layout)
 
     def update_description(self):
-        modele = self.combo_modeles.currentText()
-        description = ModelIA.get_description_model(modele)
-        self.description_modele.setText(description)
+        model = self.combo_models.currentText()
+        description = ModelIA.get_description_model(model)
+        self.description_model.setText(description)
 
     def save_config(self):
-        modele = self.combo_modeles.currentText()
-        ModelIA.set_model(modele)
+        model = self.combo_models.currentText()
+        ModelIA.set_model(model)
         self.accept()
