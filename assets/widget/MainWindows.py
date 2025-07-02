@@ -1,6 +1,17 @@
-from PySide6.QtWidgets import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QTextEdit,
+    QTreeView,
+    QFileSystemModel,
+    QAction,
+    QFileDialog,
+    QDialog,
+)
+from PySide6.QtCore import QDir
 
 from assets.widget.ConfigDialog import ConfigDialog
 
@@ -27,7 +38,6 @@ class MainWindows(QMainWindow):
         layout_left.addWidget(button_select_folder)
         layout_left.addWidget(text_erea_prompt)
 
-
         button_generate = QPushButton("Générer l'arborescence", self)
         button_generate.setEnabled(False)
         layout_left.addWidget(button_generate)
@@ -36,7 +46,6 @@ class MainWindows(QMainWindow):
         button_apply_to_system = QPushButton("Appliquer au système", self)
         button_apply_to_system.setEnabled(False)
         layout_left.addWidget(button_apply_to_system)
-
 
         self.tree_file = QTreeView(self)
         self.model = QFileSystemModel()
@@ -59,7 +68,13 @@ class MainWindows(QMainWindow):
         action_show_files = QAction("Afficher les fichiers", self)
         action_show_files.setCheckable(True)
         action_show_files.setChecked(True)
-        action_show_files.triggered.connect(lambda: self.model.setFilter(QDir.NoDotAndDotDot | QDir.Files | QDir.Dirs if action_show_files.isChecked() else QDir.NoDotAndDotDot | QDir.Dirs))
+        action_show_files.triggered.connect(
+            lambda: self.model.setFilter(
+                QDir.NoDotAndDotDot | QDir.Files | QDir.Dirs
+                if action_show_files.isChecked()
+                else QDir.NoDotAndDotDot | QDir.Dirs
+            )
+        )
 
         option_menu = menu.addMenu("Options")
         selection_model = QAction("Selection du modèle d'ia", self)
@@ -67,7 +82,6 @@ class MainWindows(QMainWindow):
         option_menu.addAction(selection_model)
 
         visualisation_menu.addAction(action_show_files)
-
 
     def select_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder")
