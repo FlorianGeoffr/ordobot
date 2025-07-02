@@ -7,11 +7,11 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QTreeView,
     QFileSystemModel,
-    QAction,
     QFileDialog,
     QDialog,
 )
 from PySide6.QtCore import QDir
+from PySide6.QtGui import QAction  # Explicitly import QAction from QtGui
 
 from assets.widget.ConfigDialog import ConfigDialog
 
