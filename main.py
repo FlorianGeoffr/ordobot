@@ -3,6 +3,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import os
 import sys
+from assets.widget.MainWindows import MainWindows
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -10,7 +11,7 @@ if __name__ == "__main__":
     app.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__), "assets", "icon.png")))
     app.setStyle("Fusion")
 
-    main_window = QMainWindow()
+    main_window = MainWindows()
     main_window.show()
 
     sys.exit(app.exec())
