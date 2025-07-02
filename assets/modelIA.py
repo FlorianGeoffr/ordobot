@@ -31,7 +31,7 @@ models_ollama = {
     }
 }
 
-class ModeleIA:
+class ModelIA:
 
     @staticmethod
     def get_model_name():
@@ -39,7 +39,7 @@ class ModeleIA:
 
     @staticmethod
     def get_ollama_name():
-        model = ModeleIA.get_model_name()
+        model = ModelIA.get_model_name()
         if model in models_ollama:
             return models_ollama[model]["name"]
         else:
