@@ -23,6 +23,8 @@ from PySide6.QtGui import QAction
 from assets.FSUtils import get_dossier_struct
 from assets.IAIntegration import IAIntegration
 from assets.widget.ConfigDialog import ConfigDialog
+from assets.config import Config
+from assets.theme import theme_manager
 
 
 class CGUDialog(QDialog):
@@ -60,6 +62,11 @@ class CGUDialog(QDialog):
 class MainWindows(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindows, self).__init__(parent)
+
+        # Initialiser config et appliquer le thème sauvegardé
+        self.config = Config()
+        theme_manager.apply_theme()
+
         central_widget = QWidget(self)
         self.setCentralWidget(central_widget)
 
@@ -98,15 +105,33 @@ class MainWindows(QMainWindow):
 
         layout_right.addWidget(self.tree_file)
 
+        # Création des menus
+        self.create_menus()
+
+    def create_menus(self):
+        """Crée tous les menus de l'application"""
         menu = self.menuBar()
+
+        # Menu Visualisation
+        self.create_visualisation_menu(menu)
+
+        # Menu Configuration (regroupe IA, Thème, Langue)
+        self.create_configuration_menu(menu)
+
+    def create_visualisation_menu(self, menu):
+        """Crée le menu Visualisation"""
         visualisation_menu = menu.addMenu("Visualisation")
+
         action_expand_all = QAction("Développer tout", self)
         action_expand_all.triggered.connect(self.tree_file.expandAll)
         visualisation_menu.addAction(action_expand_all)
+
         action_collapse_all = QAction("Réduire tout", self)
         action_collapse_all.triggered.connect(self.tree_file.collapseAll)
         visualisation_menu.addAction(action_collapse_all)
-        # select show file
+
+        visualisation_menu.addSeparator()
+
         action_show_files = QAction("Afficher les fichiers", self)
         action_show_files.setCheckable(True)
         action_show_files.setChecked(True)
@@ -117,28 +142,105 @@ class MainWindows(QMainWindow):
                 else QDir.NoDotAndDotDot | QDir.Dirs
             )
         )
-
-        option_menu = menu.addMenu("Options")
-        selection_model = QAction("Selection du modèle d'ia", self)
-        selection_model.triggered.connect(self.open_option_dialog)
-        option_menu.addAction(selection_model)
-
-        action_cgu = QAction("CGU", self)
-        action_cgu.triggered.connect(self.open_cgu_dialog)
-        option_menu.addAction(action_cgu)
-
         visualisation_menu.addAction(action_show_files)
 
+    def create_configuration_menu(self, menu):
+        """Crée le menu Configuration avec ses sous-menus"""
+        config_menu = menu.addMenu("Configuration")
+
+        # Sous-menu IA
+        ia_submenu = config_menu.addMenu("IA")
+
+        # Action pour ouvrir ConfigDialog
+        action_config_ia = QAction("Sélectionner modèle et clé API...", self)
+        action_config_ia.triggered.connect(self.open_ia_config)
+        ia_submenu.addAction(action_config_ia)
+
+        ia_submenu.addSeparator()
+
+        # Affichage du modèle actuel
+        current_model = self.config.get("ai_model", "Non configuré")
+        action_current_model = QAction(f"Modèle actuel: {current_model}", self)
+        action_current_model.setEnabled(False)
+        ia_submenu.addAction(action_current_model)
+        self.action_current_model = action_current_model
+
+        # Sous-menu Thème
+        theme_submenu = config_menu.addMenu("Thème")
+
+        themes = [("dark", "Sombre"), ("light", "Clair")]
+        current_theme = theme_manager.get_current_theme()
+
+        self.theme_actions = {}
+        for theme_key, theme_label in themes:
+            action = QAction(theme_label, self)
+            action.setCheckable(True)
+            action.setChecked(theme_key == current_theme)
+            action.triggered.connect(lambda checked, t=theme_key: self.set_theme(t))
+            theme_submenu.addAction(action)
+            self.theme_actions[theme_key] = action
+
+        # Sous-menu Langue
+        language_submenu = config_menu.addMenu("Langue")
+
+        languages = ["French", "English", "Spanish"]
+        current_language = self.config.get("language", "French")
+
+        self.language_actions = {}
+        for language in languages:
+            action = QAction(language, self)
+            action.setCheckable(True)
+            action.setChecked(language == current_language)
+            action.triggered.connect(lambda checked, l=language: self.set_language(l))
+            language_submenu.addAction(action)
+            self.language_actions[language] = action
+
+        # Ajouter l'action CGU
+        action_cgu = QAction("CGU", self)
+        action_cgu.triggered.connect(self.open_cgu_dialog)
+        config_menu.addAction(action_cgu)
+
+    def set_theme(self, theme):
+        """Change le thème et met à jour les menus"""
+        theme_manager.set_theme(theme)
+        print(f"Thème changé vers: {theme}")
+
+        # Mettre à jour les coches
+        for theme_key, action in self.theme_actions.items():
+            action.setChecked(theme_key == theme)
+
+    def set_language(self, language):
+        """Change la langue et met à jour les menus"""
+        self.config.set("language", language)
+        print(f"Langue changée vers: {language}")
+
+        # Mettre à jour les coches
+        for lang_key, action in self.language_actions.items():
+            action.setChecked(lang_key == language)
+
+    def open_ia_config(self):
+        """Ouvre la configuration IA"""
+        dial = ConfigDialog(self)
+        if dial.exec() == QDialog.Accepted:
+            print("Configuration IA sauvegardée")
+            # Mettre à jour l'affichage du modèle actuel
+            current_model = self.config.get("ai_model", "Non configuré")
+            self.action_current_model.setText(f"Modèle actuel: {current_model}")
+        else:
+            print("Configuration IA annulée")
+
     def select_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select Folder")
+        """Sélectionne un dossier"""
+        folder = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier")
         if folder:
-            print(f"Selected folder: {folder}")
+            print(f"Dossier sélectionné: {folder}")
             self.model.setRootPath(folder)
             self.tree_file.setRootIndex(self.model.index(folder))
         else:
-            print("No folder selected")
+            print("Aucun dossier sélectionné")
 
     def open_option_dialog(self):
+        """Méthode de compatibilité - redirige vers config IA"""
         dial = ConfigDialog()
         if dial.exec() == QDialog.Accepted:
             print("Configuration saved")
@@ -150,17 +252,42 @@ class MainWindows(QMainWindow):
         cgu_dialog.exec()
 
     def generate_tree(self):
-        actions, resume = IAIntegration().get_audit(
-            self.text_erea_prompt.toPlainText(),
-            get_dossier_struct(self.model.rootPath()),
-        )
-        for action in actions:
-            print("Action:", action)
-        messagesBox = QMessageBox()
-        messagesBox.setWindowTitle("Résumé de l'audit")
-        messagesBox.setText(resume)
-        messagesBox.setInformativeText("Voulez-vous appliquer ces changements ?")
-        messagesBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        messagesBox.setDefaultButton(QMessageBox.No)
+        """Génère l'arborescence avec l'IA"""
+        try:
+            # Vérifier si la configuration IA est prête
+            api_key = self.config.get("chatgpt_api_key", "")
+            if not api_key:
+                QMessageBox.warning(
+                    self,
+                    "Configuration manquante",
+                    "Veuillez configurer votre clé API dans Configuration > IA > Sélectionner modèle et clé API...",
+                )
+                return
 
-        messagesBox.exec()
+            actions, resume = IAIntegration().get_audit(
+                self.text_erea_prompt.toPlainText(),
+                get_dossier_struct(self.model.rootPath()),
+            )
+
+            for action in actions:
+                print("Action:", action)
+
+            messagesBox = QMessageBox()
+            messagesBox.setWindowTitle("Résumé de l'audit")
+            messagesBox.setText(resume)
+            messagesBox.setInformativeText("Voulez-vous appliquer ces changements ?")
+            messagesBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            messagesBox.setDefaultButton(QMessageBox.No)
+
+            messagesBox.exec()
+
+        except ValueError as e:
+            # Erreur de configuration IA
+            QMessageBox.critical(
+                self,
+                "Erreur de configuration",
+                f"Erreur IA: {str(e)}\n\nVeuillez configurer votre clé API dans Configuration > IA.",
+            )
+        except Exception as e:
+            # Autres erreurs
+            QMessageBox.critical(self, "Erreur", f"Une erreur s'est produite: {str(e)}")
