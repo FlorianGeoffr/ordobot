@@ -9,10 +9,12 @@ class Config(metaclass=Singleton):
         # Créer le dossier spécifique selon l'OS dans les dossiers système
         if os.name == "nt":  # Windows
             # AppData/Roaming/OrdoBot
-            self.config_dir = Path(os.getenv('APPDATA')) / "OrdoBot"
+            self.config_dir = Path(os.getenv("APPDATA")) / "OrdoBot"
         elif os.uname().sysname == "Darwin":  # macOS
             # ~/Library/Application Support/OrdoBot
-            self.config_dir = Path.home() / "Library" / "Application Support" / "OrdoBot"
+            self.config_dir = (
+                Path.home() / "Library" / "Application Support" / "OrdoBot"
+            )
         else:  # Linux et autres Unix
             # ~/.config/OrdoBot
             self.config_dir = Path.home() / ".config" / "OrdoBot"
