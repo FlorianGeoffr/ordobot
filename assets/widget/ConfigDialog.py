@@ -20,9 +20,10 @@ class ConfigDialog(QDialog):
 
         # Liste des modèles disponibles
         self.list_models = [
-            "gpt-4.1 nano",
-            "gpt-4.1 turbo",
-            "gpt-4 mini",
+            "gpt-4.1-mini",
+            "gpt-4.1",
+            "gpt-4o-mini",
+            "gpt-4o",
         ]
 
         self.setWindowTitle("Configuration IA")
