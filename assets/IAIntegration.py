@@ -55,26 +55,26 @@ class IAIntegration(metaclass=Singleton):
             messages=[
                 {
                     "role": "system",
-                    "content": (
-                        "You analyze and improve a folder structure.\n\n"
-                        "Output: ONE LINE. Format: mk:path;rm:path;mv:src:dest;me:summary in French\n\n"
-                        "Rules:\n"
-                        "- find good folder structure\n"
-                        "- Only work with folders (no files)\n"
-                        "- mk: create folder\n"
-                        "- rm: remove folder\n"
-                        "- mv: move/rename folder (format: mv:source:destination)\n"
-                        "- specify the full path for mk:, rm:, and mv:\n"
-                        "- Each mv: must contain exactly two `:` → format: mv:src/:dest/\n"
-                        "- Do not shorten or omit any part of the command\n"
-                        "- Each mv: must handle ONE folder only\n"
-                        "- Use `;` as separator (no spaces)\n"
-                        "- No duplicates, accents, smart quotes, long dashes, or incomplete commands\n"
-                        "- Allowed chars: letters, numbers, / . ' - , and space\n"
-                        "- Do not delete anything unless explicitly required by user instruction\n"
-                        "- me: must be written in French\n\n"
-                        f"Current structure:\n{string_dossier}"
-                    ),
+                    "content": f"""
+You analyze and improve a folder structure.
+
+Output: ONE LINE. Format: mk:path;rm:path;mv:src:dest;me:summary in French
+
+Rules:
+- Only folders (no files)
+- All paths are folder names
+- mv: must follow mv:source:destination (exactly two `:`)
+- Each mv: moves one folder only
+- Specify the full path for the mk, rm, and mv commands.
+- Use `;` as separator (no spaces)
+- No duplicates, accents, smart quotes, long dashes, or incomplete commands
+- Allowed chars: letters, numbers, / . ' - , and space
+- Do not delete anything unless explicitly instructed
+- me: must be last and written in French
+
+Current structure:
+{string_dossier}
+""",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -83,7 +83,7 @@ class IAIntegration(metaclass=Singleton):
 
     def get_new(self, prompt: str) -> tuple[list[FSAction], str]:
         response = self.client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
