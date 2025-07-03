@@ -45,13 +45,14 @@ class IAIntegration(metaclass=Singleton):
                 "API key for ChatGPT is not set. Please configure it in the settings."
             )
         self.client = OpenAI(api_key=Config().get("chatgpt_api_key", None))
+        self.model = Config().get("ai_model", "gpt-4.1")  # Default model
 
     def get_audit(
         self, prompt: str, dossier: dict[str, dict]
     ) -> tuple[list[FSAction], str]:
         string_dossier = self.generate_str_dossier(dossier)
         response = self.client.chat.completions.create(
-            model="gpt-4.1-mini",
+            model=self.model,  # Use dynamic model
             messages=[
                 {
                     "role": "system",
@@ -83,7 +84,7 @@ Current structure:
 
     def get_new(self, prompt: str) -> tuple[list[FSAction], str]:
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=self.model,  # Use dynamic model
             messages=[
                 {
                     "role": "system",
