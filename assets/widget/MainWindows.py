@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -8,14 +13,48 @@ from PySide6.QtWidgets import (
     QTreeView,
     QFileSystemModel,
     QFileDialog,
-    QDialog, QMessageBox,
+    QDialog,
+    QMessageBox,
+    QTextBrowser,
 )
 from PySide6.QtCore import QDir
-from PySide6.QtGui import QAction  # Explicitly import QAction from QtGui
+from PySide6.QtGui import QAction
 
 from assets.FSUtils import get_dossier_struct
 from assets.IAIntegration import IAIntegration
 from assets.widget.ConfigDialog import ConfigDialog
+
+
+class CGUDialog(QDialog):
+    def __init__(self, parent=None):
+        super(CGUDialog, self).__init__(parent)
+        self.setWindowTitle("Conditions Générales d'Utilisation")
+        self.setFixedSize(600, 400)
+        layout = QVBoxLayout(self)
+        text_browser = QTextBrowser(self)
+        text_browser.setPlainText(
+            "Conditions Générales d’Utilisation (CGU) – OrdoBot\n\n"
+            "Objet\n"
+            "OrdoBot est une application gratuite d’organisation automatique de dossiers et fichiers, "
+            "basée sur l’intelligence artificielle.\n\n"
+            "Usage autorisé\n"
+            "L’application peut être utilisée librement par les particuliers et les professionnels, "
+            "à condition que l’usage ne soit ni commercial, ni lucratif (pas de revente, de service "
+            "payant basé sur OrdoBot, etc.).\n\n"
+            "Propriété\n"
+            "Le logiciel, son nom et son interface sont la propriété de ses créateurs. Toute reproduction "
+            "ou modification sans accord est interdite.\n\n"
+            "Responsabilité\n"
+            'OrdoBot est fourni "en l’état", sans garantie. L’équipe ne peut être tenue responsable des '
+            "pertes de données ou d’un usage inapproprié.\n\n"
+            "Données personnelles\n"
+            "OrdoBot fonctionne localement. Aucune donnée personnelle n’est collectée ou transmise.\n\n"
+            "Loi applicable\n"
+            "Les CGU sont régies par le droit français. En cas de litige, le tribunal compétent sera "
+            "celui de Bourges."
+        )
+        layout.addWidget(text_browser)
+        self.setLayout(layout)
 
 
 class MainWindows(QMainWindow):
@@ -84,6 +123,10 @@ class MainWindows(QMainWindow):
         selection_model.triggered.connect(self.open_option_dialog)
         option_menu.addAction(selection_model)
 
+        action_cgu = QAction("CGU", self)
+        action_cgu.triggered.connect(self.open_cgu_dialog)
+        option_menu.addAction(action_cgu)
+
         visualisation_menu.addAction(action_show_files)
 
     def select_folder(self):
@@ -102,9 +145,14 @@ class MainWindows(QMainWindow):
         else:
             print("Configuration cancelled")
 
+    def open_cgu_dialog(self):
+        cgu_dialog = CGUDialog(self)
+        cgu_dialog.exec()
+
     def generate_tree(self):
         actions, resume = IAIntegration().get_audit(
-            self.text_erea_prompt.toPlainText(), get_dossier_struct(self.model.rootPath())
+            self.text_erea_prompt.toPlainText(),
+            get_dossier_struct(self.model.rootPath()),
         )
         for action in actions:
             print("Action:", action)
