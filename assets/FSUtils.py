@@ -1,5 +1,5 @@
-from assets.IAIntegration import FSAction
 import os
+
 EXCLUSIONS = [
     # Versionnage
     ".git",
@@ -13,7 +13,6 @@ EXCLUSIONS = [
     ".svn",
     ".hg",
     ".bzr",
-
     # Node.js / Frontend
     "node_modules",
     "bower_components",
@@ -31,7 +30,6 @@ EXCLUSIONS = [
     "tmp",
     "temp",
     ".turbo",
-
     # Python
     "__pycache__",
     ".venv",
@@ -42,7 +40,6 @@ EXCLUSIONS = [
     ".tox",
     "pip-wheel-metadata",
     ".ipynb_checkpoints",
-
     # Java / JVM
     "target",
     "bin",
@@ -51,14 +48,12 @@ EXCLUSIONS = [
     ".idea/libraries",
     "build/classes",
     "build/reports",
-
     # C / C++ / Rust
     "out",
     "build",
     "target",
     ".ccls-cache",
     "Cargo.lock",
-
     # IDE & Configs
     ".idea",
     ".vscode",
@@ -66,13 +61,11 @@ EXCLUSIONS = [
     ".settings",
     ".metadata",
     "workspace-storage",
-
     # Docker / Container
     "docker_tmp",
     ".docker",
     "release",
     "release/app",
-
     # CI/CD et logs
     "coverage",
     ".coverage",
@@ -81,7 +74,6 @@ EXCLUSIONS = [
     "reports",
     "artifacts",
     ".nyc_output",
-
     # Systèmes & OS
     ".DS_Store",
     "Thumbs.db",
@@ -96,7 +88,6 @@ EXCLUSIONS = [
     ".AppleDouble",
     ".AppleDB",
     ".AppleDesktop",
-
     # Médias et Cloud volumineux
     "Photos Library.photoslibrary",
     "iPhoto Library",
@@ -111,11 +102,9 @@ EXCLUSIONS = [
     "OneDrive",
     "Dropbox",
     "Nextcloud",
-
     # Archives temporaires
     "__MACOSX",
     ".unison",
-
     # Cache divers
     "cache",
     ".cache",
@@ -126,7 +115,6 @@ EXCLUSIONS = [
     ".pnp",
     ".pnp.js",
     ".caches",
-
     # Machine Learning / Data
     "checkpoints",
     "runs",
@@ -136,12 +124,10 @@ EXCLUSIONS = [
     "models",
     "weights",
     ".dvc",
-
     # Tests / Debug
     ".pytest_cache",
     "test-output",
     "tests/logs",
-
     # Packages lourds compressés
     "*.zip",
     "*.tar",
@@ -149,28 +135,23 @@ EXCLUSIONS = [
     "*.tgz",
     "*.rar",
     "*.7z",
-
     # Backup et fichiers temporaires
     "*.bak",
     "*.tmp",
     "*.swp",
     "*.swo",
     "*~",
-
     # Cache Windows spécifique
     "System Volume Information",
     "$RECYCLE.BIN",
-
     # Mac TimeMachine
     ".MobileBackups",
-
     # Virtualisation & Emulation
     "VirtualBox VMs",
     "*.vmdk",
     "*.vdi",
     "*.iso",
     "*.qcow2",
-
     # Divers gros exports
     "screenshots",
     "exports",
@@ -209,4 +190,5 @@ def get_dossier_struct(path: str, base_path=None) -> dict:
     except PermissionError:
         pass  # Sécurité en cas d'accès refusé
 
+    return dossier
     return dossier

@@ -58,6 +58,10 @@ git push origin feat/ma-fonctionnalite
 3. **Ctrl+S** formate automatiquement à la sauvegarde
 4. **Extensions suggérées** s'installent automatiquement
 
+## 📄 Conditions Générales d'Utilisation (CGU)
+
+Vous pouvez consulter les Conditions Générales d'Utilisation directement depuis l'application en cliquant sur **Options > CGU** dans la barre de menu.
+
 ## 🚨 En cas de problème
 
 ### Alias Git ne marchent pas ?

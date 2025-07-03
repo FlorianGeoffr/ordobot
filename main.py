@@ -1,7 +1,10 @@
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication
 import os
 import sys
+
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication
 from assets.widget.MainWindows import MainWindows
 
 if __name__ == "__main__":
