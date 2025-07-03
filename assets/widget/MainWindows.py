@@ -8,11 +8,13 @@ from PySide6.QtWidgets import (
     QTreeView,
     QFileSystemModel,
     QFileDialog,
-    QDialog,
+    QDialog, QMessageBox,
 )
 from PySide6.QtCore import QDir
 from PySide6.QtGui import QAction  # Explicitly import QAction from QtGui
 
+from assets.FSUtils import get_dossier_struct
+from assets.IAIntegration import IAIntegration
 from assets.widget.ConfigDialog import ConfigDialog
 
 
@@ -31,15 +33,16 @@ class MainWindows(QMainWindow):
         button_select_folder = QPushButton("Choisir le dossier cible", self)
         button_select_folder.clicked.connect(self.select_folder)
 
-        text_erea_prompt = QTextEdit(self)
-        text_erea_prompt.setPlaceholderText("Entrez votre prompt ici...")
-        text_erea_prompt.setMinimumHeight(100)
+        self.text_erea_prompt = QTextEdit(self)
+        self.text_erea_prompt.setPlaceholderText("Entrez votre prompt ici...")
+        self.text_erea_prompt.setMinimumHeight(100)
 
         layout_left.addWidget(button_select_folder)
-        layout_left.addWidget(text_erea_prompt)
+        layout_left.addWidget(self.text_erea_prompt)
 
         button_generate = QPushButton("Générer l'arborescence", self)
-        button_generate.setEnabled(False)
+        button_generate.setEnabled(True)
+        button_generate.clicked.connect(self.generate_tree)
         layout_left.addWidget(button_generate)
         layout_left.addStretch()
 
@@ -98,3 +101,18 @@ class MainWindows(QMainWindow):
             print("Configuration saved")
         else:
             print("Configuration cancelled")
+
+    def generate_tree(self):
+        actions, resume = IAIntegration().get_audit(
+            self.text_erea_prompt.toPlainText(), get_dossier_struct(self.model.rootPath())
+        )
+        for action in actions:
+            print("Action:", action)
+        messagesBox = QMessageBox()
+        messagesBox.setWindowTitle("Résumé de l'audit")
+        messagesBox.setText(resume)
+        messagesBox.setInformativeText("Voulez-vous appliquer ces changements ?")
+        messagesBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        messagesBox.setDefaultButton(QMessageBox.No)
+
+        messagesBox.exec()

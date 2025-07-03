@@ -4,6 +4,7 @@ PySide6_Essentials==6.9.1
 shiboken6==6.9.1
 ollama==0.5.1
 
-black==23.12.1
+black==24.3.0
 flake8>=6.0.0
 isort>=5.0.0
+openai==1.93.0
