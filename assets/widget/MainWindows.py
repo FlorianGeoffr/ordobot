@@ -25,6 +25,11 @@ from assets.IAIntegration import IAIntegration
 from assets.widget.ConfigDialog import ConfigDialog
 from assets.config import Config
 from assets.theme import theme_manager
+from assets.widget.CustomTreeWidget import (
+    get_virtual_fs,
+    comparer_structure,
+    DiffFileSystemModel,
+)
 
 
 class CGUDialog(QDialog):
@@ -61,6 +66,8 @@ class CGUDialog(QDialog):
 
 class MainWindows(QMainWindow):
     def __init__(self, parent=None):
+        self.struct = None
+        self.__list_actions = []
         super(MainWindows, self).__init__(parent)
 
         # Initialiser config et appliquer le thème sauvegardé
@@ -96,20 +103,21 @@ class MainWindows(QMainWindow):
         button_apply_to_system.setEnabled(False)
         layout_left.addWidget(button_apply_to_system)
 
-        self.tree_file = QTreeView(self)
-        self.model = QFileSystemModel()
-        self.model.setRootPath(QDir.rootPath())
-        self.tree_file.setModel(self.model)
-        self.tree_file.setRootIndex(self.model.index(QDir.rootPath()))
+        layout_double_tree_view = QHBoxLayout()
+        self.original_tree_view = QTreeView(self)
+        self.original_tree_view_model = QFileSystemModel(self)
+        self.original_tree_view.setModel(self.original_tree_view_model)
+        self.custom_tree_view = QTreeView(self)
+        self.custom_tree_view_model = DiffFileSystemModel()
+        self.custom_tree_view.setModel(self.custom_tree_view_model)
+
+        layout_double_tree_view.addWidget(self.original_tree_view)
+        layout_double_tree_view.addWidget(self.custom_tree_view)
+
+        layout_right.addLayout(layout_double_tree_view)
+
         self.setWindowTitle("OrdoBot")
 
-        layout_right.addWidget(self.tree_file)
-
-        # Création des menus
-        self.create_menus()
-
-    def create_menus(self):
-        """Crée tous les menus de l'application"""
         menu = self.menuBar()
 
         # Menu Visualisation
@@ -123,11 +131,17 @@ class MainWindows(QMainWindow):
         visualisation_menu = menu.addMenu("Visualisation")
 
         action_expand_all = QAction("Développer tout", self)
-        action_expand_all.triggered.connect(self.tree_file.expandAll)
+        action_expand_all.triggered.connect(
+            lambda: self.original_tree_view.expandAll()
+            or self.custom_tree_view.expandAll()
+        )
         visualisation_menu.addAction(action_expand_all)
 
         action_collapse_all = QAction("Réduire tout", self)
-        action_collapse_all.triggered.connect(self.tree_file.collapseAll)
+        action_collapse_all.triggered.connect(
+            lambda: self.original_tree_view.collapseAll()
+            or self.custom_tree_view.collapseAll()
+        )
         visualisation_menu.addAction(action_collapse_all)
 
         visualisation_menu.addSeparator()
@@ -135,14 +149,6 @@ class MainWindows(QMainWindow):
         action_show_files = QAction("Afficher les fichiers", self)
         action_show_files.setCheckable(True)
         action_show_files.setChecked(True)
-        action_show_files.triggered.connect(
-            lambda: self.model.setFilter(
-                QDir.NoDotAndDotDot | QDir.Files | QDir.Dirs
-                if action_show_files.isChecked()
-                else QDir.NoDotAndDotDot | QDir.Dirs
-            )
-        )
-        visualisation_menu.addAction(action_show_files)
 
     def create_configuration_menu(self, menu):
         """Crée le menu Configuration avec ses sous-menus"""
@@ -233,9 +239,13 @@ class MainWindows(QMainWindow):
         """Sélectionne un dossier"""
         folder = QFileDialog.getExistingDirectory(self, "Sélectionner un dossier")
         if folder:
-            print(f"Dossier sélectionné: {folder}")
-            self.model.setRootPath(folder)
-            self.tree_file.setRootIndex(self.model.index(folder))
+            print(f"Selected folder: {folder}")
+            self.original_tree_view_model.setRootPath(folder)
+            self.original_tree_view.setRootIndex(
+                self.original_tree_view_model.index(folder)
+            )
+            self.struct = get_dossier_struct(folder)
+            print("Base structure set from folder:", folder)
         else:
             print("Aucun dossier sélectionné")
 
@@ -252,42 +262,23 @@ class MainWindows(QMainWindow):
         cgu_dialog.exec()
 
     def generate_tree(self):
-        """Génère l'arborescence avec l'IA"""
-        try:
-            # Vérifier si la configuration IA est prête
-            api_key = self.config.get("chatgpt_api_key", "")
-            if not api_key:
-                QMessageBox.warning(
-                    self,
-                    "Configuration manquante",
-                    "Veuillez configurer votre clé API dans Configuration > IA > Sélectionner modèle et clé API...",
-                )
-                return
-
-            actions, resume = IAIntegration().get_audit(
-                self.text_erea_prompt.toPlainText(),
-                get_dossier_struct(self.model.rootPath()),
-            )
-
-            for action in actions:
-                print("Action:", action)
-
-            messagesBox = QMessageBox()
-            messagesBox.setWindowTitle("Résumé de l'audit")
-            messagesBox.setText(resume)
-            messagesBox.setInformativeText("Voulez-vous appliquer ces changements ?")
-            messagesBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            messagesBox.setDefaultButton(QMessageBox.No)
-
-            messagesBox.exec()
-
-        except ValueError as e:
-            # Erreur de configuration IA
-            QMessageBox.critical(
-                self,
-                "Erreur de configuration",
-                f"Erreur IA: {str(e)}\n\nVeuillez configurer votre clé API dans Configuration > IA.",
-            )
-        except Exception as e:
-            # Autres erreurs
-            QMessageBox.critical(self, "Erreur", f"Une erreur s'est produite: {str(e)}")
+        actions, resume = IAIntegration().get_audit(
+            self.text_erea_prompt.toPlainText(), self.struct
+        )
+        for action in actions:
+            print("Action:", action)
+        messagesBox = QMessageBox()
+        messagesBox.setWindowTitle("Résumé de l'audit")
+        messagesBox.setText(resume)
+        messagesBox.exec()
+        virt_folder = get_virtual_fs(self.struct, actions)
+        self.struct = get_dossier_struct(virt_folder)
+        print("Virtual folder structure created at:", virt_folder)
+        self.custom_tree_view_model.setRootPath(virt_folder)
+        self.custom_tree_view.setRootIndex(
+            self.custom_tree_view_model.index(virt_folder)
+        )
+        self.custom_tree_view_model.set_diff(
+            comparer_structure(self.original_tree_view_model.rootPath(), virt_folder)
+        )
+        self.__list_actions = actions
