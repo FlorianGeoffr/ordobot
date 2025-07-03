@@ -160,5 +160,4 @@ $RECYCLE.BIN/
 # Application specific
 config.ini
 *.log
-ollama_models/
 temp/
