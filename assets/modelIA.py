@@ -1,4 +1,5 @@
-from assets.config import Config
+from assets.config import Config
+
 models_ollama = {
     "TinyLlama": {
         "name": "tinyllama",
@@ -71,3 +72,11 @@ class ModelIA:
     @staticmethod
     def list_models():
         return list(models_ollama.keys())
+
+    @staticmethod
+    def get_api_key():
+        return Config().get("chatgpt_api_key", "")
+
+    @staticmethod
+    def set_api_key(api_key):
+        Config().set("chatgpt_api_key", api_key)

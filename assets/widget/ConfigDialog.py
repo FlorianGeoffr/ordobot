@@ -29,6 +29,11 @@ class ConfigDialog(QDialog):
         layout.addWidget(QLabel("Description du modèle :"))
         layout.addWidget(self.description_model)
 
+        self.text_api = QLineEdit(self)
+        self.text_api.setPlaceholderText("Clé API ChatGPT")
+        self.text_api.setText(ModelIA.get_api_key())
+        layout.addWidget(self.text_api)
+
         button_save = QPushButton("Enregistrer", self)
         button_save.clicked.connect(self.save_config)
         layout.addWidget(button_save)
@@ -42,4 +47,6 @@ class ConfigDialog(QDialog):
     def save_config(self):
         model = self.combo_models.currentText()
         ModelIA.set_model(model)
+        api_key = self.text_api.text()
+        ModelIA.set_api_key(api_key)
         self.accept()
