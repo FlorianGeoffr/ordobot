@@ -141,10 +141,8 @@ Rules:
                 if isinstance(value, dict):
                     lines.append(f"{'  ' * (len(path.split('/')) - 1)} {key}/")
                     traverse(value, f"{path}/{key}")
-                else :
-                    lines.append(
-                        f"{'  ' * (len(path.split('/')) - 1)} {key}"
-                    )
+                else:
+                    lines.append(f"{'  ' * (len(path.split('/')) - 1)} {key}")
 
         traverse(dossier)
         return "\n".join(lines)

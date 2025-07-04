@@ -55,7 +55,8 @@ class CGUDialog(QDialog):
             'OrdoBot est fourni "en l’état", sans garantie. L’équipe ne peut être tenue responsable des '
             "pertes de données ou d’un usage inapproprié.\n\n"
             "Données personnelles\n"
-            "OrdoBot fonctionne localement. Aucune donnée personnelle n’est collectée ou transmise.\n\n"
+            "OrdoBot fonctionne localement, mais les prompts saisis pour l’organisation sont envoyés à un service d’intelligence artificielle externe (ChatGPT d’OpenAI) pour traitement. "
+            "Aucune donnée personnelle n’est collectée ou stockée par OrdoBot, mais les informations saisies dans les prompts peuvent être transmises à OpenAI pour générer l’arborescence.\n\n"
             "Loi applicable\n"
             "Les CGU sont régies par le droit français. En cas de litige, le tribunal compétent sera "
             "celui de Bourges."

@@ -19,13 +19,7 @@ class ConfigDialog(QDialog):
         self.config = Config()
 
         # Liste des modèles disponibles
-        self.list_models = [
-            "gpt-4.1-mini",
-            "gpt-4.1",
-            "gpt-4o-mini",
-            "gpt-4o",
-            "o3"
-        ]
+        self.list_models = ["gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini", "gpt-4o", "o3"]
 
         self.setWindowTitle("Configuration IA")
         self.setFixedSize(450, 280)
