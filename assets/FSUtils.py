@@ -191,4 +191,3 @@ def get_dossier_struct(path: str, base_path=None) -> dict:
         pass  # Sécurité en cas d'accès refusé
 
     return dossier
-    return dossier

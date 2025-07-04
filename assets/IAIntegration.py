@@ -38,6 +38,7 @@ def parse_output(output: str) -> tuple[list[FSAction], str]:
     return actions, summary
 
 
+# noinspection PyTypeChecker
 class IAIntegration(metaclass=Singleton):
     def __init__(self):
         if not Config().get("chatgpt_api_key", None):
@@ -51,6 +52,7 @@ class IAIntegration(metaclass=Singleton):
         self, prompt: str, dossier: dict[str, dict]
     ) -> tuple[list[FSAction], str]:
         string_dossier = self.generate_str_dossier(dossier)
+        print(f"Current structure:\n{string_dossier}")
         response = self.client.chat.completions.create(
             model=self.model,  # Use dynamic model
             messages=[
@@ -59,7 +61,7 @@ class IAIntegration(metaclass=Singleton):
                     "content": f"""
 You analyze and improve a folder structure.
 
-Output: ONE LINE. Format: mk:path;rm:path;mv:src:dest;me:summary in French
+Output: ONE LINE. Format: mk:path;rm:path;mv:src:dest;mvc:src:dest;me:summary in French
 
 Rules:
 - Only folders (no files)
@@ -72,6 +74,11 @@ Rules:
 - Allowed chars: letters, numbers, / . ' - , and space
 - Do not delete anything unless explicitly instructed
 - me: must be last and written in French
+- mvc: is for moving contents of a folder, format: mvc:source:destination
+
+create the new structure with mk
+then mvc the content of old folders to new ones
+and finally rm the old folders
 
 Current structure:
 {string_dossier}
@@ -130,29 +137,14 @@ Rules:
             return any(value is None for value in d.values())
 
         def traverse(d, path=""):
-            if as_file(d):
-                lines.append(
-                    f"{'  ' * (len(path.split('/')) - 1)} [{get_number_of_lines(d)}: {get_extension(d)}]"
-                )
             for key, value in d.items():
                 if isinstance(value, dict):
                     lines.append(f"{'  ' * (len(path.split('/')) - 1)} {key}/")
                     traverse(value, f"{path}/{key}")
+                else :
+                    lines.append(
+                        f"{'  ' * (len(path.split('/')) - 1)} {key}"
+                    )
 
         traverse(dossier)
         return "\n".join(lines)
-
-
-if __name__ == "__main__":
-    # Example usage
-    ia_integration = IAIntegration()
-    out = """mk:Projects;mv:ESTIAM E1:Projects/ESTIAM E1;mv:ESTIAM E1 copy:Projects/ESTIAM E1 copy;mv:WebstormProjects:Projects/WebstormProjects;mv:SiteInternetSquash:Projects/SiteInternetSquash;mv:saveSatisServer:Projects/saveSatisServer;mv:TOMAS_Alexandre:Projects/TOMAS_Alexandre;mv:TOMAS_Alexandre-1FCTDES-PT1:Projects/TOMAS_Alexandre-1FCTDES-PT1;mv:TOMAS_Alexandre-1FCTDES-PT2:Projects/TOMAS_Alexandre-1FCTDES-PT2;mv:STAGE:Projects/STAGE;mv:Photos iCloud de Alexandre  Tomas:Projects/Photos   iCloud de Alexandre  Tomas;mv:image:Assets;mk:Assets Project;mv:Assets Project HTML:Assets Project/HTML;mv:HackLGBT:Assets/HackLGBT;mv:testboreal:Projects/testboreal;mv:image/TOMAS_Alexandre/Assets:Assets/TOMAS_Alexandre;me:Proposition d'organisation avec un dossier principal 'Projects' pour les projets et 'Assets' pour les ressources, facilitant la navigation et la gestion."""
-    actions, summary = ia_integration._IAIntegration__parse_output(out)
-    print("Actions:")
-    for action in actions:
-        print(f"Type: {action.type}, Args: {action.args}")
-    print("Summary:", summary)
-    print("Actions:")
-    for action in actions:
-        print(f"Type: {action.type}, Args: {action.args}")
-    print("Summary:", summary)
