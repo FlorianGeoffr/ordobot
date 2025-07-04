@@ -24,6 +24,7 @@ class ConfigDialog(QDialog):
             "gpt-4.1",
             "gpt-4o-mini",
             "gpt-4o",
+            "o3"
         ]
 
         self.setWindowTitle("Configuration IA")

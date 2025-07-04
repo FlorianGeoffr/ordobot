@@ -88,4 +88,13 @@ def get_virtual_fs(base, actions) -> str:
             dst = temp_folder + "/" + action.args[1]
             if os.path.exists(src):
                 shutil.move(src, dst)
+        elif action.type == "mvc":
+            # copy file in src to dst (but not the folder)
+            src = temp_folder + "/" + action.args[0]
+            dst = temp_folder + "/" + action.args[1]
+            if os.path.exists(src):
+                if os.path.isdir(src):
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src, dst)
     return temp_folder
