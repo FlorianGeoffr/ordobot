@@ -1,0 +1,28 @@
+{
+  "objectifs": [
+    "Optimiser la structure des dossiers",
+    "Réduire la profondeur excessive",
+    "Éviter les doublons"
+  ],
+  "contraintes": [
+    "Ne pas supprimer de dossiers sauf indication explicite",
+    "Ne manipuler que les dossiers et non les fichiers",
+    "Utiliser uniquement les caractères autorisés"
+  ],
+  "actions_disponibles": [
+    "mk: pour créer un dossier",
+    "rm: pour supprimer un dossier",
+    "mv: pour déplacer un dossier vers un autre",
+    "mvc: pour déplacer le contenu d’un dossier"
+  ],
+  "format_sortie": {
+    "separateur": ";",
+    "structure": "mk:path;mv:src:dest;rm:path;me:Résumé en français"
+  },
+  "exemples": [
+    "mk:project/docs;",
+    "mv:project/old:project/archive;",
+    "rm:project/unused;",
+    "me:Réorganisation des dossiers pour une meilleure lisibilité"
+  ]
+}

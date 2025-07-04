@@ -4,7 +4,7 @@ from PySide6.scripts.project_lib import Singleton
 from openai import OpenAI
 
 from assets.config import Config
-
+from assets.load_memory_context import load_memory_context  # ← Ajouté
 
 @dataclass
 class FSAction:
@@ -13,15 +13,8 @@ class FSAction:
 
 
 def parse_output(output: str) -> tuple[list[FSAction], str]:
-    """
-    Parse the output from the AI model to extract actions and a summary.
-    :param output: The output string from the AI model.
-    :return: A tuple containing a list of FSAction and a summary string.
-    """
     actions = []
     summary = ""
-
-    # Example parsing logic (to be implemented based on actual output format)
     lines = output.split(";")
     for line in lines:
         if not line.startswith("me:"):
@@ -39,7 +32,6 @@ def parse_output(output: str) -> tuple[list[FSAction], str]:
     return actions, summary
 
 
-# noinspection PyTypeChecker
 class IAIntegration(metaclass=Singleton):
     def __init__(self):
         if not Config().get("chatgpt_api_key", None):
@@ -47,54 +39,25 @@ class IAIntegration(metaclass=Singleton):
                 "API key for ChatGPT is not set. Please configure it in the settings."
             )
         self.client = OpenAI(api_key=Config().get("chatgpt_api_key", None))
-        self.model = Config().get("ai_model", "gpt-4.1")  # Default model
+        self.model = Config().get("ai_model", "gpt-4.1")
 
-    def get_audit(
-        self, prompt: str, dossier: dict[str, dict]
-    ) -> tuple[list[FSAction], str]:
-        print("Starting audit with prompt and structure:", prompt, dossier)
+    def get_audit(self, prompt: str, dossier: dict[str, dict]) -> tuple[list[FSAction], str]:
         string_dossier = self.generate_str_dossier(dossier)
-        print(f"Current structure:\n{string_dossier}")
-        instruction = f"""
-You analyze and improve a folder structure.
+        memory_context = load_memory_context()
 
-Output : ONE LINE. Format :
-mk:path;rm:path;mv:src:dest;mvc:src:dest;me:résumé (en français)
-
-Règles (à suivre strictement) :
-
-Commandes autorisées : mk: (créer dossier), mv: (déplacer un dossier), mvc: (déplacer le contenu d’un dossier), rm: (supprimer dossier), me: (résumé).
-
-Ordre obligatoire : d’abord tous les mk:, puis tous les mv: / mvc:, puis tous les rm:, enfin **me:`.
-
-mv: et mvc: : format exact commande:source:destination (deux « : » seulement) et ne déplacent qu’un seul dossier (ou son contenu) à la fois.
-
-Chemins complets relatifs à la racine fournis pour chaque commande.
-
-Séparateur : le point-virgule ; sans espace avant/après.
-
-Noms créés avec mk: : uniquement lettres, chiffres, / . ' - et espace (aucun accent, guillemet typographique ou tiret long).
-
-Chemins source dans mv:/mvc:/rm: : peuvent contenir des accents si ces dossiers existent déjà.
-
-Ne refais pas un mk: si le dossier existe : ignore-le silencieusement.
-
-Pas de doublons (même commande + même chemin).
-
-Ne supprime aucun dossier sauf si une instruction rm: est fournie.
-
-me: doit toujours être la dernière commande, rédigée en français et résumant l’opération.
-
-structure existant:
-{string_dossier}
-"""
-        print(instruction)
         response = self.client.chat.completions.create(
-            model=self.model,  # Use dynamic model
+            model=self.model,
             messages=[
                 {
                     "role": "system",
-                    "content": instruction
+                    "content": f"""
+Tu es un expert en structuration de dossiers.
+
+{memory_context}
+
+Structure actuelle :
+{string_dossier}
+"""
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -102,36 +65,24 @@ structure existant:
         return parse_output(response.choices[0].message.content)
 
     def get_new(self, prompt: str) -> tuple[list[FSAction], str]:
+        memory_context = load_memory_context()
         response = self.client.chat.completions.create(
-            model=self.model,  # Use dynamic model
+            model=self.model,
             messages=[
                 {
                     "role": "system",
-                    "content": """
-You generate a folder structure (no files).
+                    "content": f"""
+Tu génères une structure de dossiers (pas de fichiers).
 
-Output: ONE LINE. Format: mk:folder/;mk:folder/;me:summary in French
-
-Rules:
-- Only use mk: to create folders (must end with `/`)
-- Use `;` as separator (no spaces)
-- No files, no duplicates, no accents, smart quotes, long dashes, or incomplete commands
-- Allowed chars: letters, numbers, / . ' - , and space
-- me: must be last and in French""",
+{memory_context}
+"""
                 },
                 {"role": "user", "content": prompt},
             ],
         )
         return parse_output(response.choices[0].message.content)
 
-    def generate_str_dossier(self, dossier) -> str:
-        """
-        Convert the dossier dictionary into a string representation.
-        l=N chemin[/si dossier]
-        :param dossier: Dictionary representing the file system structure.
-        {"test": {"fichier.txt": None, "dossier": {"fichier2.txt": None}}}
-        """
-        print(dossier)
+    def generate_str_dossier(self, dossier: dict[str, dict]) -> str:
         lines = []
 
         def traverse(d, path=""):
