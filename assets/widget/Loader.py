@@ -3,7 +3,6 @@ from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 
 
-
 class Loader(QDialog):
     def __init__(self, parent=None):
         super(Loader, self).__init__(parent)

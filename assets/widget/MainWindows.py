@@ -33,6 +33,7 @@ from assets.widget.CustomTreeWidget import (
     DiffFileSystemModel,
 )
 
+
 class WorkerAIGeneration(QThread):
     on_finished = Signal(object)
 
@@ -46,6 +47,7 @@ class WorkerAIGeneration(QThread):
         print("Current structure:", self.struct)
         self.output = IAIntegration().get_audit(self.prompt, self.struct)
         self.on_finished.emit(self.output)
+
 
 class CGUDialog(QDialog):
     def __init__(self, parent=None):
@@ -282,7 +284,9 @@ class MainWindows(QMainWindow):
     def generate_tree(self):
         """Génère l'arborescence basée sur le prompt et la structure actuelle"""
         if not self.struct:
-            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier d'abord.")
+            QMessageBox.warning(
+                self, "Erreur", "Veuillez sélectionner un dossier d'abord."
+            )
             return
 
         prompt = self.text_erea_prompt.toPlainText().strip()

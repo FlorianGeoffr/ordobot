@@ -6,6 +6,7 @@ from openai import OpenAI
 from assets.config import Config
 from assets.load_memory_context import load_memory_context  # ← Ajouté
 
+
 @dataclass
 class FSAction:
     type: str
@@ -41,7 +42,9 @@ class IAIntegration(metaclass=Singleton):
         self.client = OpenAI(api_key=Config().get("chatgpt_api_key", None))
         self.model = Config().get("ai_model", "gpt-4.1")
 
-    def get_audit(self, prompt: str, dossier: dict[str, dict]) -> tuple[list[FSAction], str]:
+    def get_audit(
+        self, prompt: str, dossier: dict[str, dict]
+    ) -> tuple[list[FSAction], str]:
         string_dossier = self.generate_str_dossier(dossier)
         memory_context = load_memory_context()
 
@@ -57,7 +60,7 @@ Tu es un expert en structuration de dossiers.
 
 Structure actuelle :
 {string_dossier}
-"""
+""",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -75,7 +78,7 @@ Structure actuelle :
 Tu génères une structure de dossiers (pas de fichiers).
 
 {memory_context}
-"""
+""",
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -97,5 +100,10 @@ Tu génères une structure de dossiers (pas de fichiers).
         traverse(dossier)
         return "\n".join(lines)
 
+
 if __name__ == "__main__":
-    pprint.pp(parse_output("mk:Images/People;mk:Images/Seasons;mk:Images/Seasons/Winter;mk:Images/Seasons/Summer;mvc:Images/Vacances:Images/People;mvc:Vacances/Winter:Images/Seasons/Winter;mvc:Vacances/Summer:Images/Seasons/Summer;rm:Images/Vacances;rm:Vacances;me:structure organisee par personnes et saisons"))
+    pprint.pp(
+        parse_output(
+            "mk:Images/People;mk:Images/Seasons;mk:Images/Seasons/Winter;mk:Images/Seasons/Summer;mvc:Images/Vacances:Images/People;mvc:Vacances/Winter:Images/Seasons/Winter;mvc:Vacances/Summer:Images/Seasons/Summer;rm:Images/Vacances;rm:Vacances;me:structure organisee par personnes et saisons"
+        )
+    )
