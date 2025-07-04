@@ -1,5 +1,6 @@
 import os
 
+
 def get_dossier_struct(path: str, base_path=None) -> dict:
     if base_path is None:
         base_path = path  # Garde la racine d'origine

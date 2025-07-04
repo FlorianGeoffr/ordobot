@@ -18,6 +18,32 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## 🔑 Obtenir une clé API OpenAI
+
+Pour utiliser les fonctionnalités d'intelligence artificielle de l'application, vous devez disposer d'une clé API OpenAI. Voici les étapes pour l'obtenir :
+
+### Étape 1 : Créer un compte OpenAI
+1. Rendez-vous sur [https://platform.openai.com/signup/](https://platform.openai.com/signup/).
+2. Créez un compte ou connectez-vous si vous en avez déjà un.
+
+### Étape 2 : Générer une clé API
+1. Une fois connecté, accédez à [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys).
+2. Cliquez sur **Create new secret key** pour générer une nouvelle clé API.
+3. Copiez la clé générée et conservez-la en lieu sûr (vous ne pourrez pas la voir à nouveau).
+
+### Étape 3 : Configurer la clé API dans OrdoBot
+1. Lancez l'application OrdoBot.
+2. Dans la barre de menu, cliquez sur **Configuration > IA > Sélectionner modèle et clé API...**.
+3. Collez votre clé API dans le champ prévu à cet effet.
+4. Cliquez sur **Tester** pour vérifier la validité de la clé.
+5. Enregistrez la configuration.
+
+---
+
+**⚠️ Important :**  
+- Ne partagez jamais votre clé API avec d'autres personnes. Elle donne accès à votre compte OpenAI.  
+- L'utilisation de l'API OpenAI peut entraîner des frais. Consultez les [tarifs OpenAI](https://platform.openai.com/pricing/) pour plus
+
 ## 🔥 Workflow quotidien
 
 ```bash
