@@ -1,3 +1,4 @@
+import pprint
 from dataclasses import dataclass
 from PySide6.scripts.project_lib import Singleton
 from openai import OpenAI
@@ -51,38 +52,49 @@ class IAIntegration(metaclass=Singleton):
     def get_audit(
         self, prompt: str, dossier: dict[str, dict]
     ) -> tuple[list[FSAction], str]:
+        print("Starting audit with prompt and structure:", prompt, dossier)
         string_dossier = self.generate_str_dossier(dossier)
         print(f"Current structure:\n{string_dossier}")
+        instruction = f"""
+You analyze and improve a folder structure.
+
+Output : ONE LINE. Format :
+mk:path;rm:path;mv:src:dest;mvc:src:dest;me:résumé (en français)
+
+Règles (à suivre strictement) :
+
+Commandes autorisées : mk: (créer dossier), mv: (déplacer un dossier), mvc: (déplacer le contenu d’un dossier), rm: (supprimer dossier), me: (résumé).
+
+Ordre obligatoire : d’abord tous les mk:, puis tous les mv: / mvc:, puis tous les rm:, enfin **me:`.
+
+mv: et mvc: : format exact commande:source:destination (deux « : » seulement) et ne déplacent qu’un seul dossier (ou son contenu) à la fois.
+
+Chemins complets relatifs à la racine fournis pour chaque commande.
+
+Séparateur : le point-virgule ; sans espace avant/après.
+
+Noms créés avec mk: : uniquement lettres, chiffres, / . ' - et espace (aucun accent, guillemet typographique ou tiret long).
+
+Chemins source dans mv:/mvc:/rm: : peuvent contenir des accents si ces dossiers existent déjà.
+
+Ne refais pas un mk: si le dossier existe : ignore-le silencieusement.
+
+Pas de doublons (même commande + même chemin).
+
+Ne supprime aucun dossier sauf si une instruction rm: est fournie.
+
+me: doit toujours être la dernière commande, rédigée en français et résumant l’opération.
+
+structure existant:
+{string_dossier}
+"""
+        print(instruction)
         response = self.client.chat.completions.create(
             model=self.model,  # Use dynamic model
             messages=[
                 {
                     "role": "system",
-                    "content": f"""
-You analyze and improve a folder structure.
-
-Output: ONE LINE. Format: mk:path;rm:path;mv:src:dest;mvc:src:dest;me:summary in French
-
-Rules:
-- Only folders (no files)
-- All paths are folder names
-- mv: must follow mv:source:destination (exactly two `:`)
-- Each mv: moves one folder only
-- Specify the full path for the mk, rm, and mv commands.
-- Use `;` as separator (no spaces)
-- No duplicates, accents, smart quotes, long dashes, or incomplete commands
-- Allowed chars: letters, numbers, / . ' - , and space
-- Do not delete anything unless explicitly instructed
-- me: must be last and written in French
-- mvc: is for moving contents of a folder, format: mvc:source:destination
-
-create the new structure with mk
-then mvc the content of old folders to new ones
-and finally rm the old folders
-
-Current structure:
-{string_dossier}
-""",
+                    "content": instruction
                 },
                 {"role": "user", "content": prompt},
             ],
@@ -112,31 +124,18 @@ Rules:
         )
         return parse_output(response.choices[0].message.content)
 
-    def generate_str_dossier(self, dossier: dict[str, dict]) -> str:
+    def generate_str_dossier(self, dossier) -> str:
         """
         Convert the dossier dictionary into a string representation.
         l=N chemin[/si dossier]
         :param dossier: Dictionary representing the file system structure.
         {"test": {"fichier.txt": None, "dossier": {"fichier2.txt": None}}}
         """
+        print(dossier)
         lines = []
 
-        def get_number_of_lines(d):
-            return sum(1 for key, value in d.items() if value is None)
-
-        def get_extension(dict):
-            list_extension = []
-            for key, value in dict.items():
-                if value is None:
-                    list_extension.append(key.split(".")[-1])
-
-            list_extension_unique = set(list_extension)
-            return ",".join(list_extension_unique)
-
-        def as_file(d):
-            return any(value is None for value in d.values())
-
         def traverse(d, path=""):
+            print(d, path)
             for key, value in d.items():
                 if isinstance(value, dict):
                     lines.append(f"{'  ' * (len(path.split('/')) - 1)} {key}/")
@@ -146,3 +145,6 @@ Rules:
 
         traverse(dossier)
         return "\n".join(lines)
+
+if __name__ == "__main__":
+    pprint.pp(parse_output("mk:Images/People;mk:Images/Seasons;mk:Images/Seasons/Winter;mk:Images/Seasons/Summer;mvc:Images/Vacances:Images/People;mvc:Vacances/Winter:Images/Seasons/Winter;mvc:Vacances/Summer:Images/Seasons/Summer;rm:Images/Vacances;rm:Vacances;me:structure organisee par personnes et saisons"))

@@ -36,14 +36,15 @@ from assets.widget.CustomTreeWidget import (
 class WorkerAIGeneration(QThread):
     on_finished = Signal(object)
 
-    def __init__(self, struct, actions, parent=None):
+    def __init__(self, struct, prompt, parent=None):
         super(WorkerAIGeneration, self).__init__(parent)
         self.struct = struct
-        self.actions = actions
+        self.prompt = prompt
         self.output = None
 
     def run(self):
-        self.output = IAIntegration().get_audit(self.struct, self.actions)
+        print("Current structure:", self.struct)
+        self.output = IAIntegration().get_audit(self.prompt, self.struct)
         self.on_finished.emit(self.output)
 
 class CGUDialog(QDialog):
@@ -290,8 +291,9 @@ class MainWindows(QMainWindow):
         print("Current structure:", self.struct)
 
         # Lancer le thread de génération IA
-        self.worker = WorkerAIGeneration(self.struct, self.__list_actions)
+        self.worker = WorkerAIGeneration(self.struct, prompt)
         self.worker.on_finished.connect(self.generate_tree_callback)
+        self.worker.finished.connect(self.close_loader)
         self.worker.start()
         self.loader = Loader()
         self.loader.setWindowTitle("Génération de l'arborescence")
