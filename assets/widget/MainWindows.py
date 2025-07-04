@@ -1,6 +1,8 @@
 import sys
 import os
 
+from assets.widget.Loader import Loader
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from PySide6.QtWidgets import (
@@ -17,7 +19,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTextBrowser,
 )
-from PySide6.QtCore import QDir
+from PySide6.QtCore import QDir, QThread, Signal
 from PySide6.QtGui import QAction
 
 from assets.FSUtils import get_dossier_struct
@@ -31,6 +33,18 @@ from assets.widget.CustomTreeWidget import (
     DiffFileSystemModel,
 )
 
+class WorkerAIGeneration(QThread):
+    on_finished = Signal(object)
+
+    def __init__(self, struct, actions, parent=None):
+        super(WorkerAIGeneration, self).__init__(parent)
+        self.struct = struct
+        self.actions = actions
+        self.output = None
+
+    def run(self):
+        self.output = IAIntegration().get_audit(self.struct, self.actions)
+        self.on_finished.emit(self.output)
 
 class CGUDialog(QDialog):
     def __init__(self, parent=None):
@@ -67,9 +81,11 @@ class CGUDialog(QDialog):
 
 class MainWindows(QMainWindow):
     def __init__(self, parent=None):
+        self.language_actions = None
         self.struct = None
         self.__list_actions = []
         super(MainWindows, self).__init__(parent)
+        self.loader = None
 
         # Initialiser config et appliquer le thème sauvegardé
         self.config = Config()
@@ -263,9 +279,30 @@ class MainWindows(QMainWindow):
         cgu_dialog.exec()
 
     def generate_tree(self):
-        actions, resume = IAIntegration().get_audit(
-            self.text_erea_prompt.toPlainText(), self.struct
-        )
+        """Génère l'arborescence basée sur le prompt et la structure actuelle"""
+        if not self.struct:
+            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un dossier d'abord.")
+            return
+
+        prompt = self.text_erea_prompt.toPlainText().strip()
+
+        print("Prompt:", prompt)
+        print("Current structure:", self.struct)
+
+        # Lancer le thread de génération IA
+        self.worker = WorkerAIGeneration(self.struct, self.__list_actions)
+        self.worker.on_finished.connect(self.generate_tree_callback)
+        self.worker.start()
+        self.loader = Loader()
+        self.loader.setWindowTitle("Génération de l'arborescence")
+        self.loader.update_message("Génération de l'arborescence en cours...")
+        self.loader.exec()
+
+    def close_loader(self):
+        self.loader.close()
+
+    def generate_tree_callback(self, output):
+        actions, resume = output
         for action in actions:
             print("Action:", action)
         messagesBox = QMessageBox()
